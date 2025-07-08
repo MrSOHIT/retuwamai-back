@@ -1,0 +1,161 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  email     String?  @unique
+  password  String
+  role      UserRole @default(WORKER)
+  fullName  String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  businesses Business[]
+  auditLogs  AuditLog[]
+
+  @@map("users")
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  nameEnglish String?
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  businesses Business[]
+
+  @@map("categories")
+}
+
+model Business {
+  id String @id @default(cuid())
+
+  // Basic Information (Step 1)
+  businessName      String
+  contactPerson     String
+  position          String?
+  businessAddress   String
+  contactNumber     String
+  email             String?
+  tole              String?
+  wardNumber        Int
+  municipality      String?
+  establishmentYear String?
+  ownershipType     String?
+
+  // Business Type (Step 2)
+  businessType String?
+  businessField String?
+
+  // Operation Details (Step 3)
+  totalInvestment      Float?
+  locationOwnership    String?
+  annualTurnover       Float?
+  registrationNumber   String?
+  vatNumber           String?
+  laborPermit         String?
+  panNumber           String?
+  environmentApproval String?
+  otherPermits        String?
+
+  // Employment Details (Step 4)
+  permanentEmployees         Int?
+  femaleEmployees           Int?
+  temporaryContractEmployees Int?
+  marginalizedEmployees     Int?
+  partTimeFreelancers       Int?
+  avgSalary                 Float?
+
+  // Financial Details (Step 5)
+  incomeSource  String?
+  avgIncome     Float?
+  avgExpense    Float?
+  loanProvider  String?
+  loanAmount    Float?
+  loanDuration  String?
+
+  // Future Plans (Step 6)
+  expansionPlans     String?
+  mainChallenges     String?
+  municipalSupport   String?
+
+  // Social Responsibility (Step 7)
+  communityContribution String?
+
+  // Additional Information (Step 8)
+  additionalSupport String?
+  formFilledDate    String?
+  finalRemarks      String?
+
+  // System fields
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  category   Category? @relation(fields: [categoryId], references: [id])
+  categoryId String?
+  createdBy  User      @relation(fields: [createdById], references: [id])
+  createdById String
+
+  documents BusinessDocument[]
+  auditLogs AuditLog[]
+
+  @@map("businesses")
+}
+
+model BusinessDocument {
+  id           String   @id @default(cuid())
+  originalName String
+  fileName     String
+  filePath     String
+  fileSize     Int
+  mimeType     String
+  uploadedAt   DateTime @default(now())
+
+  // Relations
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessId String
+
+  @@map("business_documents")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String   // CREATE, UPDATE, DELETE
+  tableName String
+  recordId  String
+  oldData   String?  // JSON string
+  newData   String?  // JSON string
+  timestamp DateTime @default(now())
+
+  // Relations
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  business   Business? @relation(fields: [businessId], references: [id])
+  businessId String?
+
+  @@map("audit_logs")
+}
+
+enum UserRole {
+  ADMIN
+  WORKER
+}
